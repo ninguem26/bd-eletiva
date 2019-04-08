@@ -35,16 +35,28 @@
         },
         methods: {
             addClass() {
-                this.$http.get('http://127.0.0.1:5984/_uuids').then(({ data }) => {
-                    this.$http.put('http://127.0.0.1:5984/school/'+data['uuids'][0], {
-                        doc_type: "classes",
-                        domainName: this.domainName,
-                        grade: this.grade,
-                        year: this.year
-                    }).then(({ data }) => {
-                        this.$router.push({ name: "classroom" });
+                if(this.$store.state.db == "couchdb") {
+                    this.$http.get('http://127.0.0.1:5984/_uuids').then(({data}) => {
+                        this.$http.put('http://127.0.0.1:5984/school/' + data['uuids'][0], {
+                            doc_type: "classes",
+                            domainName: this.domainName,
+                            grade: this.grade,
+                            year: this.year
+                        }).then(({data}) => {
+                            this.$router.push({name: "classroom"});
+                        });
                     });
-                });
+                } else if(this.$store.state.db == "basex") {
+                    this.$http.post('http://localhost:8000/api/classes', {
+                        data: {
+                            domainName: this.domainName,
+                            grade: this.grade,
+                            year: this.year
+                        }
+                    }).then(function (response) {
+                        console.log(response);
+                    });
+                }
             }
         }
     }

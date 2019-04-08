@@ -102,24 +102,44 @@
         },
         methods: {
             getData() {
-                this.$http.get('http://127.0.0.1:5984/school/_design/students/_view/by_city').then(({ data }) => {
-                    data['rows'].forEach(student => {
-                        this.students.push(new Student(student.value));
+                if(this.$store.state.db == "couchdb") {
+                    this.$http.get('http://127.0.0.1:5984/school/_design/students/_view/by_city').then(({data}) => {
+                        data['rows'].forEach(student => {
+                            this.students.push(new Student(student.value));
+                        });
                     });
-                });
+                } else if(this.$store.state.db == "basex") {
+                    this.$http.get('http://localhost:8000/api/students').then(({ data }) => {
+                        data['data'].forEach(student => {
+                            this.students.push(new Student(student));
+                        });
+                    });
+                }
             },
             deleteStudent(id) {
-                this.$http.get('http://admin:123456@127.0.0.1:5984/school/'+id).then(({ data }) => {
-                    this.$http.delete('http://admin:123456@127.0.0.1:5984/school/'+id+'?rev='+data['_rev']).then(({ data }) => {
-                        if(data['ok']) {
-                            for(var i = 0; i < this.students.length; i++) {
-                                if(this.students[i].id == id) {
+                if(this.$store.state.db == "couchdb") {
+                    this.$http.get('http://admin:123456@127.0.0.1:5984/school/'+id).then(({ data }) => {
+                        this.$http.delete('http://admin:123456@127.0.0.1:5984/school/'+id+'?rev='+data['_rev']).then(({ data }) => {
+                            if(data['ok']) {
+                                for(var i = 0; i < this.students.length; i++) {
+                                    if(this.students[i].id == id) {
+                                        this.students.splice(i, 1);
+                                    }
+                                }
+                            }
+                        });
+                    });
+                } else if(this.$store.state.db == "basex") {
+                    this.$http.delete('http://localhost:8000/api/students/' + id).then(({data}) => {
+                        if (data['data'] == 'Success!') {
+                            for (var i = 0; i < this.students.length; i++) {
+                                if (this.students[i].id == id) {
                                     this.students.splice(i, 1);
                                 }
                             }
                         }
                     });
-                });
+                }
             },
             searchByCity() {
                 this.students = [];
@@ -127,11 +147,19 @@
                 if(this.city == "") {
                     this.getData();
                 } else {
-                    this.$http.get('http://127.0.0.1:5984/school/_design/students/_view/by_city?key="' + this.city + '"').then(({data}) => {
-                        data['rows'].forEach(student => {
-                            this.students.push(new Student(student.value));
+                    if(this.$store.state.db == "couchdb") {
+                        this.$http.get('http://127.0.0.1:5984/school/_design/students/_view/by_city?key="' + this.city + '"').then(({data}) => {
+                            data['rows'].forEach(student => {
+                                this.students.push(new Student(student.value));
+                            });
                         });
-                    });
+                    } else if(this.$store.state.db == "basex") {
+                        this.$http.get('http://localhost:8000/api/students/byCity/' + this.city).then(({data}) => {
+                            data['data'].forEach(student => {
+                                this.students.push(new Student(student));
+                            });
+                        });
+                    }
                 }
             }
         },

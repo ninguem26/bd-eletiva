@@ -58,26 +58,49 @@
         },
         methods: {
             getClasses() {
-                this.$http.get('http://127.0.0.1:5984/school/_design/classes/_view/by_year').then(({ data }) => {
-                    data['rows'].forEach(classroom => {
-                        this.classes.push(new Classroom(classroom.value));
+                if(this.$store.state.db == "couchdb") {
+                    this.$http.get('http://127.0.0.1:5984/school/_design/classes/_view/by_year').then(({data}) => {
+                        data['rows'].forEach(classroom => {
+                            this.classes.push(new Classroom(classroom.value));
+                        });
                     });
-                });
+                } else if(this.$store.state.db == "basex") {
+                    this.$http.get('http://localhost:8000/api/classes').then(({data}) => {
+                        data['data'].forEach(classroom => {
+                            this.classes.push(new Classroom(classroom));
+                        });
+                    });
+                }
             },
             addStudent() {
-                this.$http.get('http://127.0.0.1:5984/_uuids').then(({ data }) => {
-                    this.$http.put('http://127.0.0.1:5984/school/'+data['uuids'][0], {
-                        doc_type: "students",
-                        name: this.name,
-                        birth: this.birth,
-                        city: this.city,
-                        address: this.address,
-                        phone: this.phone,
-                        classId: this.classId,
-                    }).then(({ data }) => {
-                        this.$router.push({ name: "student" });
+                if(this.$store.state.db == "couchdb") {
+                    this.$http.get('http://127.0.0.1:5984/_uuids').then(({data}) => {
+                        this.$http.put('http://127.0.0.1:5984/school/' + data['uuids'][0], {
+                            doc_type: "students",
+                            name: this.name,
+                            birth: this.birth,
+                            city: this.city,
+                            address: this.address,
+                            phone: this.phone,
+                            classId: this.classId,
+                        }).then(({data}) => {
+                            this.$router.push({name: "student"});
+                        });
                     });
-                });
+                } else if(this.$store.state.db == "basex") {
+                    this.$http.post('http://localhost:8000/api/students', {
+                        data: {
+                            name: this.name,
+                            birth: this.birth,
+                            city: this.city,
+                            address: this.address,
+                            phone: this.phone,
+                            classId: this.classId
+                        }
+                    }).then(function (response) {
+                        console.log(response);
+                    });
+                }
             }
         },
         created() {

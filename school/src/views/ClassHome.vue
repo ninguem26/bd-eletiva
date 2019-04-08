@@ -67,13 +67,10 @@
                         });
                     });
                 } else if(this.$store.state.db == "basex") {
-                    this.$http.get('http://@localhost:8984/rest/AB2/classes.xml?method=json&json=format=jsonml', {
-                        auth: {
-                            username: 'admin',
-                            password: 'admin'
-                        }
-                    }).then(({ data }) => {
-                        console.log(data);
+                    this.$http.get('http://localhost:8000/api/classes').then(({ data }) => {
+                        data['data'].forEach(classroom => {
+                            this.classes.push(new Classroom(classroom));
+                        });
                     });
                 }
             },
@@ -83,25 +80,45 @@
                 if(this.year == "") {
                     this.getData();
                 } else {
-                    this.$http.get('http://127.0.0.1:5984/school/_design/classes/_view/by_year?key="' + this.year + '"').then(({data}) => {
-                        data['rows'].forEach(classroom => {
-                            this.classes.push(new Classroom(classroom.value));
+                    if(this.$store.state.db == "couchdb") {
+                        this.$http.get('http://127.0.0.1:5984/school/_design/classes/_view/by_year?key="' + this.year + '"').then(({data}) => {
+                            data['rows'].forEach(classroom => {
+                                this.classes.push(new Classroom(classroom.value));
+                            });
                         });
-                    });
+                    } else if(this.$store.state.db == "basex") {
+                        this.$http.get('http://localhost:8000/api/classes/byYear/' + this.year).then(({data}) => {
+                            data['data'].forEach(classroom => {
+                                this.classes.push(new Classroom(classroom));
+                            });
+                        });
+                    }
                 }
             },
             deleteClass(id) {
-                this.$http.get('http://admin:123456@127.0.0.1:5984/school/'+id).then(({ data }) => {
-                    this.$http.delete('http://admin:123456@127.0.0.1:5984/school/'+id+'?rev='+data['_rev']).then(({ data }) => {
-                        if(data['ok']) {
-                            for(var i = 0; i < this.classes.length; i++) {
-                                if(this.classes[i].id == id) {
+                if(this.$store.state.db == "couchdb") {
+                    this.$http.get('http://admin:123456@127.0.0.1:5984/school/' + id).then(({data}) => {
+                        this.$http.delete('http://admin:123456@127.0.0.1:5984/school/' + id + '?rev=' + data['_rev']).then(({data}) => {
+                            if (data['ok']) {
+                                for (var i = 0; i < this.classes.length; i++) {
+                                    if (this.classes[i].id == id) {
+                                        this.classes.splice(i, 1);
+                                    }
+                                }
+                            }
+                        });
+                    });
+                } else if(this.$store.state.db == "basex") {
+                    this.$http.delete('http://localhost:8000/api/classes/' + id).then(({data}) => {
+                        if (data['data'] == 'Success!') {
+                            for (var i = 0; i < this.classes.length; i++) {
+                                if (this.classes[i].id == id) {
                                     this.classes.splice(i, 1);
                                 }
                             }
                         }
                     });
-                });
+                }
             },
             more(id) {
                 this.$router.push({ name: "studentClass", params: { id: id } })
@@ -109,7 +126,6 @@
         },
         created() {
             this.getData();
-            console.log(this.$store.state.db);
         }
     }
 </script>

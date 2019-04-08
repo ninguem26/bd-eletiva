@@ -96,11 +96,19 @@
         },
         methods: {
             getData() {
-                this.$http.get('http://127.0.0.1:5984/school/_design/classes/_view/get_students?key="'+this.id+'"').then(({ data }) => {
-                    data['rows'].forEach(student => {
-                        this.students.push(new Student(student.value));
+                if(this.$store.state.db == "couchdb") {
+                    this.$http.get('http://127.0.0.1:5984/school/_design/classes/_view/get_students?key="' + this.id + '"').then(({data}) => {
+                        data['rows'].forEach(student => {
+                            this.students.push(new Student(student.value));
+                        });
                     });
-                });
+                } else if(this.$store.state.db == "basex") {
+                    this.$http.get('http://localhost:8000/api/classes/'+ this.id +'/students').then(({data}) => {
+                        data['data'].forEach(student => {
+                            this.students.push(new Student(student));
+                        });
+                    });
+                }
             },
         },
         created() {

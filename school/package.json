@@ -9,10 +9,13 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "basex": "^0.9.0",
     "bootstrap": "^4.3.1",
     "core-js": "^2.6.5",
     "jquery": "^3.3.1",
+    "net": "^1.0.2",
     "popper.js": "^1.15.0",
+    "simple-basex": "0.0.6",
     "vue": "^2.6.6",
     "vue-axios": "^2.1.4",
     "vue-global-var": "0.0.4",
